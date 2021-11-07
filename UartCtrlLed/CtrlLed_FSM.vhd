@@ -121,7 +121,6 @@ begin
 		if rising_edge(piClk) then
 			sCMDReg_a <= sCMDReg_f;
 			sVALORReg_a <= sVALORReg_f;
-			sLEDReg_a <= sLEDReg_f;
 		end if;
 	end process;
 
@@ -131,8 +130,10 @@ begin
 		if rising_edge(piClk) then
 			if piRst = '1' then
 				st_a <= W_SOF;
+				sLEDReg_a <= "0000";
 			else
 				st_a <= st_f;
+				sLEDReg_a <= sLEDReg_f;
 			end if;
 		end if;
 	end process;
@@ -158,21 +159,29 @@ begin
 				end if;
 
 			when W_CMD =>
-				if sTimeOutTC = '1' then
+				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' and (sData = ON_BYTE or sData = OFF_BYTE) then
-					sCMDReg_f <= sData;
-					st_f <= W_VALOR;
-					sTimeOutRst <= '1';
+				elsif sDataReceived = '1' then --recibí el dato?
+					if (sData = ON_BYTE or sData = OFF_BYTE) then --el dato es correcto?
+						sCMDReg_f <= sData; --dato correcto
+						st_f <= W_VALOR;
+						sTimeOutRst <= '1';
+					else
+						st_f <= W_SOF; --dato incorrecto, descarto trama
+					end if;
 				end if;
 
 			when W_VALOR =>
-				if sTimeOutTC = '1' then
+				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' and unsigned(sData) > to_unsigned(0,8) and unsigned(sData) < to_unsigned(5,8)then
-					sVALORReg_f <= sData;
-					st_f <= W_EOF;
-					sTimeOutRst <= '1';
+				elsif sDataReceived = '1' then -- recibí dato?
+					if unsigned(sData) > to_unsigned(0,8) and unsigned(sData) < to_unsigned(5,8) then --dato correcto?
+						sVALORReg_f <= sData;
+						st_f <= W_EOF; --dato correcto
+						sTimeOutRst <= '1';
+					else
+						st_f <= W_SOF; --dato incorrecto, descarto trama
+					end if;
 				end if;
 
 			when W_EOF =>
