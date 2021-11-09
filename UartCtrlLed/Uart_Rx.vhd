@@ -31,7 +31,7 @@ use IEEE.MATH_REAL.ALL;
 -- Modulo = Tbit / Tclk
 --
 --  Modulo = (1/BaudRate) / (1/Fclk) = Fclk / BaudRate
---  Modulo = 100000000 / 9600 = round[10416.67] = 10417   
+--  Modulo = 100000000 / 921600 = round[10416.67] = 10417   
 entity Uart_Rx is
 Generic (
 	BAUD_RATE_PRESCALLER : NATURAL := 10417
