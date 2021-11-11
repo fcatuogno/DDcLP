@@ -187,14 +187,19 @@ begin
 			when W_EOF =>
 				if sTimeOutTC = '1' then
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' and sData = EOF_BYTE then
-					st_f <= W_SOF; 
-					if sCMDReg_a = ON_BYTE then
-						sLEDReg_f(to_integer(unsigned(sVALORReg_a))) <= '1';
-					else 
-						sLEDReg_f(to_integer(unsigned(sVALORReg_a))) <= '0';
+				elsif sDataReceived = '1' then
+					if sData = EOF_BYTE then
+						st_f <= W_SOF; 
+						if sCMDReg_a = ON_BYTE then
+							sLEDReg_f(to_integer(unsigned(sVALORReg_a))) <= '1';
+						else 
+							sLEDReg_f(to_integer(unsigned(sVALORReg_a))) <= '0';
+						end if;
+					else
+						st_f <= W_SOF; --EOF invalido/ausente, descarto trama
 					end if;
 				end if;
+				
 			when others =>
 				st_f <= W_SOF;					
 		end case;
