@@ -32,22 +32,11 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity CtrlLed_FSM is
-	--Fclk = 100MHz ;
-	--Tclk = 1/Fclk = 10 ns
-	--BaudRate = 921600
-	-- El tiempo de un Bits es
-	-- Tbit = 1/BaudRate
-	-- Modulo = Tbit / Tclk
-	--
-	--  Modulo = (1/BaudRate) / (1/Fclk) = Fclk / BaudRate
-	--  Modulo = 100000000 / 921600 = round[108.5] = 109 
-	Generic(
-		BAUD_RATE_PRESCALLER : NATURAL := 109 --921600 baudios
-	);
 	Port (
 		piRst : in std_logic;
 		piClk : in std_logic;
-		piData : in std_logic;
+		piData : in std_logic_vector(8-1 downto 0);
+		piDataReceived : in std_logic;
 
 		poLED : out std_logic_vector(4 downto 1)
 	);
@@ -56,8 +45,6 @@ end CtrlLed_FSM;
 architecture Arch_CtrlLed_FSM of CtrlLed_FSM is
 
 --señales
-signal sDataReceived : std_logic;
-signal sData : std_logic_vector(8-1 downto 0);
 signal sTimeOutTC : std_logic;
 signal sTimeOutRst : std_logic;
 
@@ -80,19 +67,6 @@ constant ON_BYTE : std_logic_vector(8-1 downto 0) := "00000001"; --0x01
 constant OFF_BYTE : std_logic_vector(8-1 downto 0) := "00000010"; --0x02
 
 begin
-	--instancia UART-Rx
-	InstUartRx : entity work.Uart_Rx
-	Generic map(
-		BAUD_RATE_PRESCALLER => BAUD_RATE_PRESCALLER
-	)
-	Port map(
-		piClk => piClk,
-		piRst => piRst,
-		poRxAvailable => sDataReceived,
-		poData => sData,
-		piRx => piData
-	);
-
 	--instancia contador timeout
 	InstTimeOUT : entity work.CounterModM
 	--Fclk = 100MHz ;
@@ -141,7 +115,7 @@ begin
 	--conexion de salida con Registro
 	poLED <= sLEDReg_a;
 
-	process(sDataReceived, sData, st_a, sCMDReg_a, sVALORReg_a, sLEDReg_a, sTimeOutTC)
+	process(piDataReceived, piData, st_a, sCMDReg_a, sVALORReg_a, sLEDReg_a, sTimeOutTC)
 	begin
 		--valores por defecto
 		st_f <= st_a;
@@ -153,7 +127,7 @@ begin
 
 		case st_a is
 			when W_SOF =>
-				if sDataReceived = '1' and sData = SOF_BYTE then
+				if piDataReceived = '1' and piData = SOF_BYTE then
 					sTimeOutRst <= '1';
 					st_f <= W_CMD;
 				end if;
@@ -161,9 +135,9 @@ begin
 			when W_CMD =>
 				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' then --recibí el dato?
-					if (sData = ON_BYTE or sData = OFF_BYTE) then --el dato es correcto?
-						sCMDReg_f <= sData; --dato correcto
+				elsif piDataReceived = '1' then --recibí el dato?
+					if (piData = ON_BYTE or piData = OFF_BYTE) then --el dato es correcto?
+						sCMDReg_f <= piData; --dato correcto
 						st_f <= W_VALOR;
 						sTimeOutRst <= '1';
 					else
@@ -174,9 +148,9 @@ begin
 			when W_VALOR =>
 				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' then -- recibí dato?
-					if unsigned(sData) > to_unsigned(0,8) and unsigned(sData) < to_unsigned(5,8) then --dato correcto?
-						sVALORReg_f <= sData;
+				elsif piDataReceived = '1' then -- recibí dato?
+					if unsigned(piData) > to_unsigned(0,8) and unsigned(piData) < to_unsigned(5,8) then --dato correcto?
+						sVALORReg_f <= piData;
 						st_f <= W_EOF; --dato correcto
 						sTimeOutRst <= '1';
 					else
@@ -187,8 +161,8 @@ begin
 			when W_EOF =>
 				if sTimeOutTC = '1' then
 					st_f <= W_SOF;
-				elsif sDataReceived = '1' then
-					if sData = EOF_BYTE then
+				elsif piDataReceived = '1' then
+					if piData = EOF_BYTE then
 						st_f <= W_SOF; 
 						if sCMDReg_a = ON_BYTE then
 							sLEDReg_f(to_integer(unsigned(sVALORReg_a))) <= '1';
