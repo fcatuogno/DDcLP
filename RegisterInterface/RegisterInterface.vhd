@@ -197,7 +197,7 @@ begin
 				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
 				elsif piDataReady = '1' then -- recibí dato?
-					if unsigned(piDATA) > to_unsigned(0,8) and unsigned(piDATA) < to_unsigned(5,8) then --dato correcto?
+					if unsigned(piDATA) < to_unsigned(4,8) then --dato correcto?
 						sPARAM2Reg_f <= piDATA;
 						st_f <= W_VAL0; --dato correcto
 						sTimeOutRst <= '1';
@@ -229,19 +229,19 @@ begin
 							--sTimeOutRst <= '1';
 						when WRITE_BYTE =>
 							case sPARAM2Reg_a is
-								when x"01" =>
+								when x"00" =>
 									poReg_8_0_f <= sVAL0Reg_a;
 									st_f <= S_SOF;
 									sDATA_f <= SOF_BYTE;
-								when x"02" =>
+								when x"01" =>
 									poReg_8_1_f <= sVAL0Reg_a;
 									st_f <= S_SOF;
 									sDATA_f <= SOF_BYTE;
-								when x"03" =>
+								when x"02" =>
 									poReg_8_2_f <= sVAL0Reg_a;
 									st_f <= S_SOF;
 									sDATA_f <= SOF_BYTE;
-								when x"04" =>
+								when x"03" =>
 									poReg_8_3_f <= sVAL0Reg_a;
 									st_f <= S_SOF;
 									sDATA_f <= SOF_BYTE; 
@@ -284,15 +284,15 @@ begin
 					sTimeOutRst <= '1';
 
 					case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
-						when x"01" =>	
+						when x"00" =>	
 							sDATA_f <= poReg_8_0_a;
 							--sDATA_f <= "01010101";	--debug purposes
-						when x"02" =>
+						when x"01" =>
 							sDATA_f <= poReg_8_1_a;
 							--sDATA_f <= sVAL0Reg_a;
-						when x"03" =>
+						when x"02" =>
 							sDATA_f <= poReg_8_2_a;
-						when x"04" =>
+						when x"03" =>
 							sDATA_f <= poReg_8_3_a;
 						when others =>
 							--si llego aca validaste como el orto
