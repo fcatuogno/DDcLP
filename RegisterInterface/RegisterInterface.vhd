@@ -386,7 +386,8 @@ begin
 				if sTimeOutTC = '1' then --venció time out?
 					st_f <= W_SOF;
 				elsif sAddressTC = '1' then --llené la RAM?
-					st_f <= W_EOF;
+					st_f <= W_EOF; --Aca se comienza a enviar SOF
+					--st_f <= W_VAL1; --debug
 					sTimeOutRst <= '1';
 				elsif piDataReady = '1' then -- recibí dato?
 					sVAL0Reg_f <= piDATA;
@@ -424,7 +425,6 @@ begin
 						--preparar registros para escribir RAM
 						--esperar que se actualice sVAL3Reg_f
 						sAddressRAM_f <= sAddressCont; --registrada
-						sTimeOutRst <= '1';	--faltaba resetear timer aca					
 					else
 						st_f <= W_EOF; --dato correcto
 					end if;
@@ -466,70 +466,52 @@ begin
 							sTimeOutRst <= '1'; --Este Lucio me lo hizo comentar. TimeOut al enviar?
 						when WRITE_BYTE =>
 							case sPARAM1Reg_a is
-								when x"00" => --banco de 8 bits
+								when x"00" => --banco de 8 bits		
+								st_f <= S_SOF;
+								sDATA_f <= SOF_BYTE; --Preparo la salida para enviar en el proximo estado
 									case sPARAM2Reg_a is
 										when x"00" =>
 											poReg_8_0_f <= sVAL0Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE; --Preparo la salida para enviar en el proximo estado
 										when x"01" =>
 											poReg_8_1_f <= sVAL0Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"02" =>
 											poReg_8_2_f <= sVAL0Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"03" =>
 											poReg_8_3_f <= sVAL0Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE; 
 										when others =>
 										--si llego aca validaste como el orto
 										st_f <= W_SOF;
 									end case;
 								
 								when x"01" => --banco de 16 bits
+									st_f <= S_SOF;
+									sDATA_f <= SOF_BYTE;
 									case sPARAM2Reg_a is
 										when x"00" =>
 											poReg_16_0_f <= sVAL0Reg_a & sVAL1Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"01" =>
 											poReg_16_1_f <= sVAL0Reg_a & sVAL1Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"02" =>
 											poReg_16_2_f <= sVAL0Reg_a & sVAL1Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"03" =>
-											poReg_16_3_f <= sVAL0Reg_a & sVAL1Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE; 
+											poReg_16_3_f <= sVAL0Reg_a & sVAL1Reg_a; 
 										when others =>
 										--si llego aca validaste como el orto
 										st_f <= W_SOF;
 									end case;
 
 								when x"02" => --banco de 32 bits
+									st_f <= S_SOF;
+									sDATA_f <= SOF_BYTE;
 									case sPARAM2Reg_a is
 										when x"00" =>
 											poReg_32_0_f <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"01" =>
 											poReg_32_1_f <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"02" =>
 											poReg_32_2_f <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE;
 										when x"03" =>
 											poReg_32_3_f <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a;
-											st_f <= S_SOF;
-											sDATA_f <= SOF_BYTE; 
 										when others =>
 										--si llego aca validaste como el orto
 										st_f <= W_SOF;
@@ -566,7 +548,8 @@ begin
 					sTimeOutRst <= '1';
 					--verificar CMD
 					if sCMDReg_a = FILL_RAM then
-						sDATA_f <= sRDataRAM(32-1 downto 24);
+						--sDATA_f <= sRDataRAM(32-1 downto 24);
+						sDATA_f <= x"fa"; --debug purposes
 						st_f <= S_VAL0;
 						--Incremento la direccion de memoria luego de enviar el 4to byte
 					else
