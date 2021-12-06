@@ -14,7 +14,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity CounterModM is
   Generic(
-  N: NATURAL := 4;   -- Nomero de bits
+  N: NATURAL := 4;   -- Nmero de bits
   M: NATURAL := 10   -- Modulo del contador
   );
   Port (

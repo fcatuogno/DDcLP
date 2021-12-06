@@ -50,7 +50,7 @@ entity TopLevel is
 		piData : in std_logic; 
 		poData : out std_logic;
 
-		poLEDs : out std_logic_vector(4-1 downto 0)
+		poLEDs : out std_logic_vector(8-1 downto 0)
 		);
 end TopLevel;
 
@@ -69,7 +69,7 @@ signal sAddressRAM : std_logic_vector(8-1 downto 0);
 
 begin
 
-poLEDs <= sReadRAM(4-1 downto 0);
+poLEDs <= sReadRAM(8-1 downto 0);
 
 --Instancia FSM
 Inst_FSM : entity work.RegisterInterface 

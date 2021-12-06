@@ -43,6 +43,10 @@ use IEEE.NUMERIC_STD.ALL;
 --escribir en el registro 3 del banco 2 el valor 0x1023
 --[SOF=0xA5] [CMD:1] [PARAM1:1] [PARAM2: 3] [VAL#0: 0x23] [VAL#1: 0x10] [VAL#2: 0xfruta ] [VAL#3: 0xfruta] [EOF=0x5A]
 
+--V 3.0
+-- se suma:
+-- BlockRam de 32x1024
+-- [SOF=0xA5] [CMD:2] [VAL#0] [VAL#1] [VAL#2] [VAL#3] .... [VAL#0] [VAL#1] [VAL#2] [VAL#3] [EOF=0x5A]
 
 entity RegisterInterface is
 	Port (
@@ -185,9 +189,9 @@ begin
 	-- 
 	-- Modulo = TimeOut / Tclk
 	--
-	--  Modulo = 100ms / 0.010 ms = 10000 
-		N => 14,   -- Numero de bits
-		M => 10000   -- Modulo del contador
+	--  Modulo = 100.000us / 0.010 us = 10.000.000 
+		N => 24,   -- Numero de bits
+		M => 10000000   -- Modulo del contador
 	)
 	  Port Map(
 		piClk => piClk,-- : in  std_logic;
@@ -200,13 +204,6 @@ begin
 	--instancia contador llenado de RAM
 	InstCountRAM : entity work.CounterModM
 	  Generic Map(
-	--Fclk = 100MHz ;
-	--Tclk = 1/Fclk = 10 ns
-	--TimeOut = 100ms
-	-- 
-	-- Modulo = TimeOut / Tclk
-	--
-	--  Modulo = 100ms / 0.010 ms = 10000 
 		N => 10,   -- Numero de bits
 		M => 1024   -- Modulo del contador
 	)
@@ -403,7 +400,6 @@ begin
 				elsif piDataReady = '1' then -- recibí dato?
 					sVAL1Reg_f <= piDATA;
 					st_f <= W_VAL2; --dato correcto
-					--st_f <= W_EOF; --debug purposes
 					sTimeOutRst <= '1';
 				end if;
 
@@ -427,7 +423,8 @@ begin
 						st_f <= F_RAM;
 						--preparar registros para escribir RAM
 						--esperar que se actualice sVAL3Reg_f
-						sAddressRAM_f <= sAddressCont; --registrada						
+						sAddressRAM_f <= sAddressCont; --registrada
+						sTimeOutRst <= '1';	--faltaba resetear timer aca					
 					else
 						st_f <= W_EOF; --dato correcto
 					end if;
