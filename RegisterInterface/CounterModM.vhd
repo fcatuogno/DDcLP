@@ -27,34 +27,29 @@ entity CounterModM is
 end entity;
 
 architecture Behavioral of CounterModM is
-  --signal sTc  : std_logic;
-  signal sQ   : unsigned(N-1 downto 0);
+  
+signal srQ_now, sQ_next : std_logic_vector(N-1 downto 0);
+signal sTc : std_logic;
 
 begin
 
- poQ<= std_logic_vector(sQ);
- --poTc <= sTc ;
-
+  poQ <= srQ_now ;
+  poTc <= sTc;
 
   process(piClk)
   begin
-  
+
     if rising_edge(piClk) then
-    
+
       if piRst = '1' then
-        sQ <= (others =>'0');
-        poTc<= '0'; 
-      elsif piEna = '1' then
-        sQ <= sQ + 1;
-        poTc<= '0';
-        if sQ = M-1 then
-          sQ <= (others =>'0');
-          poTc<= '1';
-        end if;
-      end if ;    
-        
+        srQ_now <= (others=> '0');
+      elsif piEna='1' then
+        srQ_now <= sQ_next ;
+      end if;   
     end if;
-  
   end process;
+
+    sTc <= '1' when unsigned(srQ_now) = to_unsigned(M-1,N) else '0';
+    sQ_next <= std_logic_vector( unsigned(srQ_now) + 1) when sTc='0' else std_logic_vector(TO_UNSIGNED(0,N));
 
 end architecture;
