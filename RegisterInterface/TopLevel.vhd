@@ -50,7 +50,7 @@ entity TopLevel is
 		piData : in std_logic; 
 		poData : out std_logic;
 
-		poLEDs : out std_logic_vector(8-1 downto 0)
+		poLEDs : out std_logic_vector(10-1 downto 0)
 		);
 end TopLevel;
 
@@ -65,11 +65,11 @@ signal sStarTx : std_logic;
 signal sReadyTx : std_logic;
 
 signal sReadRAM : std_logic_vector(32-1 downto 0);
-signal sAddressRAM : std_logic_vector(8-1 downto 0);
+signal sAddressRAM : std_logic_vector(16-1 downto 0);
 
 begin
 
-poLEDs <= sReadRAM(8-1 downto 0);
+poLEDs <= sReadRAM(10-1 downto 0);
 
 --Instancia FSM
 Inst_FSM : entity work.RegisterInterface 
@@ -85,12 +85,12 @@ Inst_FSM : entity work.RegisterInterface
 		piDATA => sDataRx,
 		piDataReady => sDataReceived,
 
-		poReg_8_0 => sAddressRAM,
+		poReg_8_0 => open,
 		poReg_8_1 => open,
 		poReg_8_2 => open,
 		poReg_8_3 => open,
 
-		poReg_16_0 => open,
+		poReg_16_0 => sAddressRAM,
 		poReg_16_1 => open,
 		poReg_16_2 => open,
 		poReg_16_3 => open,
@@ -103,7 +103,7 @@ Inst_FSM : entity work.RegisterInterface
 		--RAM Data BUS - 32 bit
 		poDataRAM => sReadRAM,
 		--RAM Addr=> open,
-		piAddress => "00" & sAddressRAM
+		piAddress => sAddressRAM(10-1 downto 0)
 		--RAM read=> open,
 		--piReadRAM => '0'
 	);
