@@ -92,17 +92,10 @@ architecture Arch_RegisterInterface of RegisterInterface is
 --signal para escritura de la RAM
 signal sWrRAM : std_logic;
 signal sDataRAM : std_logic_vector(32-1 downto 0);
---signal sAddressRAM_a, sAddressRAM_f : std_logic_vector(10-1 downto 0);
-
---registro para paralelizar en 32 bits datos recibidos de a 8 bits
---signal sDataRAM_a, sDataRAM_f : std_logic_vector(32-1 downto 0);
 
 --signal para lectura de RAM
 --signal sRdRAM : std_logic;
 signal sRDataRAM : std_logic_vector(32-1 downto 0);
-
---Registro para direccion de lectura de RAM
---signal sRAddressRAM_a, sRAddressRAM_f : std_logic_vector(10-1 downto 0);
 
 --Banco de Registros 1 (8 bits)
 signal poReg_8_0_a, poReg_8_0_f : std_logic_vector(1*8-1 downto 0);
@@ -126,6 +119,7 @@ signal poReg_32_3_a, poReg_32_3_f : std_logic_vector(4*8-1 downto 0);
 --registros de FSM
 type TSTATE is (W_SOF, W_CMD, W_PARAM1, W_PARAM2, W_VAL0, W_VAL1, W_VAL2, W_VAL3, W_EOF,
 				S_SOF, S_CMD, S_PARAM1, S_PARAM2, S_VAL0, S_VAL1, S_VAL2, S_VAL3, S_EOF,
+				W_RAMVAL0,W_RAMVAL1,W_RAMVAL2,W_RAMVAL3,WR_RAM,
 				DEBUG_RAM); --FILL RAM
 signal st_a, st_f : TSTATE;
 
@@ -140,7 +134,6 @@ signal sVAL3Reg_a, sVAL3Reg_f : std_logic_vector(8-1 downto 0);
 
 --registro para la salida
 signal sDATA_a, sDATA_f : std_logic_vector(8-1 downto 0);
---signal poStartTX_a, poStartTX_f : std_logic; --Hago que sea registro para sincronizarlo (No mandar antes de que este el dato en poDATA)
 
 --constantes
 constant SOF_BYTE : std_logic_vector(8-1 downto 0) := "10100101"; --0xA5
@@ -173,8 +166,8 @@ begin
 		piClk => piClk,
 
 		piWr     => sWrRAM,--declarar se�al de control
-		--piDataWr => sDataRAM,--same
-		piDataWr => std_logic_vector(to_unsigned(0,22)) & sAddressCont,--same
+		piDataWr => sDataRAM,--same
+		--piDataWr => std_logic_vector(to_unsigned(0,22)) & sAddressCont,--same
 		piAddrWr => sAddressCont,--same
 		poDataRd_1 => sRDataRAM,
 
@@ -191,9 +184,13 @@ begin
 	-- 
 	-- Modulo = TimeOut / Tclk
 	--
-	--  Modulo = 100.000us / 0.010 us = 10.000.000 
-		N => 24,   -- Numero de bits
-		M => 10000000   -- Modulo del contador
+	--  Modulo = 100.000us / 0.010 us = 10.000.000 -----------------> No llegaba a escribir toda la RAM con estos valores
+		--N => 24,   -- Numero de bits
+		--M => 10000000   -- Modulo del contador
+
+		--Modulo = 400.000us / 0.010 us = 40.000.000 
+		N => 26,   -- Numero de bits
+		M => 40000000   -- Modulo del contador
 	)
 	  Port Map(
 		piClk => piClk,-- : in  std_logic;
@@ -220,7 +217,6 @@ begin
 
 	--conexion de la salida con el registro
 	poDATA <= sDATA_a;
-	--poStartTX <= poStartTX_a;
 
 	--conexion de las salidas de los registros
 	poReg_8_0 <= poReg_8_0_a;
@@ -238,9 +234,6 @@ begin
 	poReg_32_2 <= poReg_32_2_a;
 	poReg_32_3 <= poReg_32_3_a;
 
-	--conexion salidas lectura de RAM
-	--poDataRAM <= sRDataRAM;
-
 	--registro de comandos:
 	process(piClk)
 	begin
@@ -253,7 +246,6 @@ begin
 			sVAL2Reg_a <= sVAL2Reg_f;
 			sVAL3Reg_a <= sVAL3Reg_f;
 			sDATA_a <= sDATA_f;
-			--poStartTX_a <= poStartTX_f;
 
 			--registros 
 			poReg_8_0_a <= poReg_8_0_f;
@@ -271,8 +263,6 @@ begin
 			poReg_32_2_a <= poReg_32_2_f;
 			poReg_32_3_a <= poReg_32_3_f;
 
-			--RAM
-			--sAddressRAM_a <= sAddressRAM_f;
 		end if;
 	end process;
 
@@ -288,9 +278,8 @@ begin
 		end if;
 	end process;
 
-
-	--sDataRAM <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a; 
-	--sDataRAM <= std_logic_vector(to_unsigned(0,22)) & sAddressRAM_a;
+|	--conexión con puerto de escritura de la RAM
+	sDataRAM <= sVAL0Reg_a & sVAL1Reg_a & sVAL2Reg_a & sVAL3Reg_a; 
 
 	process(piDataReady, piDATA, st_a, sCMDReg_a, sPARAM1Reg_a, sPARAM2Reg_a,
 			sVAL0Reg_a, sVAL1Reg_a, sVAL2Reg_a, sVAL3Reg_a,
@@ -299,7 +288,6 @@ begin
 			poReg_16_0_a, poReg_16_1_a, poReg_16_2_a, poReg_16_3_a,
 			poReg_32_0_a, poReg_32_1_a, poReg_32_2_a, poReg_32_3_a,
 			sAddressTC, sAddressCont,
-			--sAddressRAM_a,
 			sRDataRAM)
 	begin
 		--valores por defecto
@@ -328,15 +316,11 @@ begin
 		poReg_32_2_f <= poReg_32_2_a;
 		poReg_32_3_f <= poReg_32_3_a;
 
-		--sAddressRAM_f <= sAddressRAM_a;
-
 		sTimeOutRst <= '0';
-		--poStartTX_f <= '0';
 		poStartTX <= '0';
 		sAddressRst <= '0';
 		sWrRAM <= '0';
 		sAddresIncrement <= '0';
-		--sDataRAM <= x"00000000"; --ojo con que tenga q ser registrada
 
 		case st_a is
 			when W_SOF =>
@@ -355,7 +339,8 @@ begin
 						sTimeOutRst <= '1';
 					elsif(piDATA = FILL_RAM) then
 						sCMDReg_f <= piDATA; --dato correcto
-						st_f <= DEBUG_RAM;
+						--st_f <= DEBUG_RAM;
+						st_f <= W_RAMVAL0;
 						sAddressRst <= '1'; --Reseteo contador a Address 0x000
 						sTimeOutRst <= '1';
 					elsif(piDATA = READ_RAM) then
@@ -367,15 +352,17 @@ begin
 						st_f <= W_SOF; --dato incorrecto, descarto trama
 					end if;
 				end if;
-
-			when DEBUG_RAM =>
-				sWrRAM <= '1'; --debo escribir en el porximo pulso
-				sAddresIncrement <= '1'; --ojo con que haya que registrar esto
-				if sAddressTC = '1' then --llen� la RAM?
-					st_f <= W_EOF; --Aca se comienza a enviar SOF
-					sTimeOutRst <= '1';
-				end if;
-
+			
+			------------------------------------------------------------------------------------------------
+			--when DEBUG_RAM =>
+			--	sWrRAM <= '1'; --debo escribir en el porximo pulso
+			--	sAddresIncrement <= '1'; --ojo con que haya que registrar esto
+			--	if sAddressTC = '1' then --llen� la RAM?
+			--		st_f <= W_EOF; --Aca se comienza a enviar SOF
+			--		sTimeOutRst <= '1';
+			--	end if;
+			------------------------------------------------------------------------------------------------
+			
 			when W_PARAM1 => --Seleccion de Banco de registros
 				if sTimeOutTC = '1' then --venci� time out?
 					st_f <= W_SOF;
@@ -438,14 +425,57 @@ begin
 					st_f <= W_EOF;
 				end if;
 
+			when W_RAMVAL0 =>
+				if sTimeOutTC = '1' then --venci� time out?
+					st_f <= W_SOF;
+				elsif piDataReady = '1' then -- recib� dato? 
+					sVAL0Reg_f <= piDATA;
+					sTimeOutRst <= '1';
+					st_f <= W_RAMVAL1;
+				end if;
+
+			when W_RAMVAL1 =>
+				if sTimeOutTC = '1' then --venci� time out?
+					st_f <= W_SOF;
+				elsif piDataReady = '1' then -- recib� dato? 
+					sVAL1Reg_f <= piDATA;
+					sTimeOutRst <= '1';
+					st_f <= W_RAMVAL2;
+				end if;
+
+			when W_RAMVAL2 =>
+				if sTimeOutTC = '1' then --venci� time out?
+					st_f <= W_SOF;
+				elsif piDataReady = '1' then -- recib� dato? 
+					sVAL2Reg_f <= piDATA;
+					sTimeOutRst <= '1';
+					st_f <= W_RAMVAL3;
+				end if;
+
+			when W_RAMVAL3 =>
+				if sTimeOutTC = '1' then --venci� time out?
+					st_f <= W_SOF;
+				elsif piDataReady = '1' then -- recib� dato? 
+					sVAL3Reg_f <= piDATA;
+					sTimeOutRst <= '1';
+					st_f <= WR_RAM;
+				end if;
+
+			when WR_RAM =>
+				sWrRAM <= '1';
+				sAddresIncrement <= '1';
+				st_f <= W_RAMVAL0;
+				if sAddressTC = '1' then --llen� la RAM?
+					st_f <= W_EOF; --Aca se comienza a enviar SOF
+					sTimeOutRst <= '1';
+				end if;
+
 			when W_EOF =>
 				if sTimeOutTC = '1' then
 					st_f <= W_SOF;
 
 				elsif sCMDReg_a = FILL_RAM or sCMDReg_a = READ_RAM	then --No debo esperar EOF realmente
-					--coso
 					st_f <= S_SOF; --De cualquier modo debo enviar SOF
-					--sAddressRAM_f <= sAddressCont; --Debe estar en cero ya que la ultima vez hubo TC
 					sTimeOutRst <= '1';
 					sAddressRst <= '1';
 				elsif piDataReady = '1' and piDATA = EOF_BYTE then
@@ -453,7 +483,6 @@ begin
 						case sCMDReg_a is
 							when READ_BYTE =>
 								--Paso al siguiente estado, de cualquier manera leer� y enviar� registro
-								sDATA_f <= SOF_BYTE;
 								st_f <= S_SOF;	
 								sDATA_f <= SOF_BYTE; --Preparo la salida para enviar en el proximo estado
 								sTimeOutRst <= '1'; --Este Lucio me lo hizo comentar. TimeOut al enviar?
@@ -537,8 +566,7 @@ begin
 					sTimeOutRst <= '1';
 					--verificar CMD
 					if sCMDReg_a = FILL_RAM or sCMDReg_a = READ_RAM then
-						--sDATA_f <= sRDataRAM(32-1 downto 24);
-						sDATA_f <= x"fa"; --debug purposes
+						sDATA_f <= sRDataRAM(32-1 downto 24);
 						st_f <= S_VAL0;
 						--Incremento la direccion de memoria luego de enviar el 4to byte
 					else
@@ -571,10 +599,8 @@ begin
 							case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
 								when x"00" =>	
 									sDATA_f <= poReg_8_0_a;
-									--sDATA_f <= "01010101";	--debug purposes
 								when x"01" =>
 									sDATA_f <= poReg_8_1_a;
-									--sDATA_f <= sVAL0Reg_a;
 								when x"02" =>
 									sDATA_f <= poReg_8_2_a;
 								when x"03" =>
@@ -640,10 +666,8 @@ begin
 								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
-										--sDATA_f <= "01010101";	--debug purposes
 									when x"01" =>
 										sDATA_f <= poReg_8_1_a;
-										--sDATA_f <= sVAL0Reg_a;
 									when x"02" =>
 										sDATA_f <= poReg_8_2_a;
 									when x"03" =>
@@ -710,10 +734,8 @@ begin
 								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
-										--sDATA_f <= "01010101";	--debug purposes
 									when x"01" =>
 										sDATA_f <= poReg_8_1_a;
-										--sDATA_f <= sVAL0Reg_a;
 									when x"02" =>
 										sDATA_f <= poReg_8_2_a;
 									when x"03" =>
@@ -781,10 +803,8 @@ begin
 								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
-										--sDATA_f <= "01010101";	--debug purposes
 									when x"01" =>
 										sDATA_f <= poReg_8_1_a;
-										--sDATA_f <= sVAL0Reg_a;
 									when x"02" =>
 										sDATA_f <= poReg_8_2_a;
 									when x"03" =>
@@ -837,7 +857,6 @@ begin
 				if sTimeOutTC = '1' then
 					st_f <= W_SOF;
 				elsif sAddressTC = '1' then
-				--elsif sAddressTC = '0' then --debug purposes
 					st_f <= S_EOF;
 				elsif piUartTxReady = '1' then
 					poStartTX <= '1';
@@ -851,20 +870,6 @@ begin
 						sTimeOutRst <= '1';
 					end if;
 				end if;
-
----------------------------------------------------------------------------------
---			when S_RAM_0 =>
---				if sTimeOutTC = '1' then
---					st_f <= W_SOF;
---				elsif sAddressTC = '1' then
---					st_f <= S_EOF;
---				elsif  piUartTxReady = '1' then
---					poStartTX <= '1';
---					sDATA_f <= sRDataRAM;
---					--sAddresIncrement <= '1';
---					sTimeOutRst <= '1';
---				end if;
-----------------------------------------------------------------------------------
 
 			when S_EOF =>
 				if sTimeOutTC = '1' then
