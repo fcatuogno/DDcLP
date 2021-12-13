@@ -39,7 +39,8 @@ entity pwm is
 		piPrescaller : in std_logic_vector(24-1 downto 0);	--Parametro para definir frec del pwm (P2)
 		piDutyParam : in std_logic_vector(10-1 downto 0);	--Parametro para definir duty cycle fijo (P1)
 
-		piDutyVar : in std_logic_vector(10-1 downto 0);	--(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
+		piPrescallerDuty : in std_logic_vector(24-1 downto 0); --(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
+		piDutyVar : in std_logic_vector(10-1 downto 0);	--Duty variable leido desde la RAM
 		poReadDuty : out std_logic; --Genera pulso para realizar lectura de la RAM
 		poAddr: out std_logic_vector(10-1 downto 0); --direccion de memoria a leer
 
@@ -95,13 +96,13 @@ Inst_ContFrec : entity work.CounterModM
 --Prescaller para frecuencia de lectura de RAM
 Inst_ContFrecRAM : entity work.ProgCounterModM
 	Generic map(
-		N => 10   -- Nomero de bits
+		N => 24   -- Nomero de bits
 	)
 	Port map(
 		piClk => piClk,
 		piRst => piRst,
 		piEna => '1',
-		piMod => piDutyVar,
+		piMod => piPrescallerDuty,
 		poTc  => sRamConTC,
 		poQ   => open
 	);

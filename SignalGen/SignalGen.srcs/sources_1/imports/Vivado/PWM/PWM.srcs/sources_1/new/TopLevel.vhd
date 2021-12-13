@@ -70,12 +70,16 @@ signal sDataTx : std_logic_vector(8-1 downto 0);
 signal sStarTx : std_logic;
 signal sReadyTx : std_logic;
 
-signal sReadRAM : std_logic_vector(32-1 downto 0);
+signal sDataRAM : std_logic_vector(32-1 downto 0);
 signal sAddressRAM : std_logic_vector(10-1 downto 0);
 
 --signals para control del pwm
 signal sprescaler : std_logic_vector(32-1 downto 0); --Reg32_0
 signal sduty : std_logic_vector(16-1 downto 0); --Reg16_0
+
+signal sprescalerRAM : std_logic_vector(32-1 downto 0); --Reg32_1
+
+signal muxPWM : std_logic_vector(8-1 downto 0); --Reg8_0
 
 begin
 
@@ -85,11 +89,12 @@ begin
       piPrescaller =>  sprescaler(24-1 downto 0),--Parametro para definir frec del pwm (P2)
       piDutyParam =>	sduty(10-1 downto 0),--Parametro para definir duty cycle fijo (P1)
   
-      piDutyVar => "0000000000",--(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
+      piPrescallerDuty => sprescalerRAM(24-1 downto 0), --(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
+      piDutyVar => sDataRAM(10-1 downto 0),
       poReadDuty => open,--Genera pulso para realizar lectura de la RAM
-      poAddr => open, --direccion de memoria a leer
+      poAddr => sAddressRAM, --direccion de memoria a leer
   
-      piSelectDuty=> '0', --selecciona si usar duty fijo o leer de memoria (P3)
+      piSelectDuty => muxPWM(0), --selecciona si usar duty fijo o leer de memoria (P3)
       
       poPWM => poPWM,
   
@@ -110,23 +115,23 @@ begin
       piDATA => sDataRx,
       piDataReady => sDataReceived,
   
-      poReg_8_0  => open,
+      poReg_8_0  => muxPWM, --(P3)
       poReg_8_1  => open,
       poReg_8_2  => open,
       poReg_8_3  => open,
 
-      poReg_16_0 => sduty,
+      poReg_16_0 => sduty, --(P1)
       poReg_16_1 => open,
       poReg_16_2 => open,
       poReg_16_3 => open,
 
-      poReg_32_0 => sprescaler,
-      poReg_32_1 => open,
+      poReg_32_0 => sprescaler, --(P2)
+      poReg_32_1 => sprescalerRAM, --(P4)
       poReg_32_2 => open,
       poReg_32_3 => open,
   
       --RAM Data BUS - 32 bit
-      poDataRAM => sReadRAM,
+      poDataRAM => sDataRAM,
       piAddress => sAddressRAM
     );
 
