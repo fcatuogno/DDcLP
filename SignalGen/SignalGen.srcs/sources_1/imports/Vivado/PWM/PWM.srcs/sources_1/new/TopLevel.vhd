@@ -54,9 +54,6 @@ entity TopLevel is
     --Comunicacion Serie
     piData : in std_logic; 
 		poData : out std_logic;
-
-
-    --piDuty : in std_logic_vector(4-1 downto 0);
     
     --Salida pwm
     poPWM: out std_logic
@@ -76,25 +73,16 @@ signal sReadyTx : std_logic;
 signal sReadRAM : std_logic_vector(32-1 downto 0);
 signal sAddressRAM : std_logic_vector(10-1 downto 0);
 
---signal para conectar registro con duty estatico
-signal sduty : std_logic_vector(16-1 downto 0); 
+--signals para control del pwm
+signal sprescaler : std_logic_vector(32-1 downto 0); --Reg32_0
+signal sduty : std_logic_vector(16-1 downto 0); --Reg16_0
 
 begin
 
   Inst_PWM : entity work.pwm
     Port map(
-      --definirle una entrada para leer y registrar entradas? por ahora no
-  
-      --Fclk = 100MHz ;
-      --Tclk = 1/Fclk = 10 ns
-      --Periodo = 100 ns (10 MHz)
-      -- 
-      -- Modulo = TimeOut / Tclk
-      --
-      --  Modulo = 100.000us / 0.10 us = 1.000.000 -----------------> No llegaba a escribir toda la RAM con estos valores
-        --N => 24,   -- Numero de bits
-        --M => 10000000   -- Modulo del contador
-      piPrescaller =>  std_logic_vector(to_unsigned(1,24)),--Parametro para definir frec del pwm (P2)
+      
+      piPrescaller =>  sprescaler(24-1 downto 0),--Parametro para definir frec del pwm (P2)
       piDutyParam =>	sduty(10-1 downto 0),--Parametro para definir duty cycle fijo (P1)
   
       piDutyVar => "0000000000",--(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
@@ -132,7 +120,7 @@ begin
       poReg_16_2 => open,
       poReg_16_3 => open,
 
-      poReg_32_0 => open,
+      poReg_32_0 => sprescaler,
       poReg_32_1 => open,
       poReg_32_2 => open,
       poReg_32_3 => open,
