@@ -1,23 +1,13 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
 -- 
--- Create Date: 03.11.2021 23:11:00
--- Design Name: 
+-- Create Date: ? / ? / 2021
+-- Design Name: Generador de señales
 -- Module Name: Uart_Rx - Arch_Uart_Rx
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -155,49 +145,42 @@ begin
 
 		when ST_READ_B1 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(1) <= piRx;
 				st_f <= ST_READ_B2;
 			end if;
 
 		when ST_READ_B2 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(2) <= piRx;
 				st_f <= ST_READ_B3;
 			end if;
 
 		when ST_READ_B3 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(3) <= piRx;
 				st_f <= ST_READ_B4;
 			end if;
 
 		when ST_READ_B4 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(4) <= piRx;
 				st_f <= ST_READ_B5;
 			end if;
 
 		when ST_READ_B5 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(5) <= piRx;
 				st_f <= ST_READ_B6;
 			end if;
 
 		when ST_READ_B6 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(6) <= piRx;
 				st_f <= ST_READ_B7;
 			end if;
 
 		when ST_READ_B7 =>
 			if sTimerTc = '1' then
-				--sTimerRst <= '1';--innecesario
 				sData_next(7) <= piRx;
 				st_f <= ST_READ_BSTOP;
 			end if;

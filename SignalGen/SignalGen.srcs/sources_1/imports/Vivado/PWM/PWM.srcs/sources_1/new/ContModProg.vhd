@@ -1,11 +1,13 @@
 ----------------------------------------------------------------------------------
---
--- led blink
--- arty board
--- 16.09.2021
---
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
+-- 
+-- Create Date: 16.09.2021
+-- Design Name: Generador de señales
+-- Module Name: ProgCounterModM - Behavioral
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -27,14 +29,11 @@ entity ProgCounterModM is
 end entity;
 
 architecture Behavioral of ProgCounterModM is
-  --signal sTc  : std_logic;
   signal sQ   : unsigned(N-1 downto 0);
 
 begin
 
  poQ<= std_logic_vector(sQ);
- --poTc <= sTc ;
-
 
   process(piClk)
   begin

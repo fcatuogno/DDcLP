@@ -1,41 +1,17 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
 -- 
 -- Create Date: 03.11.2021 23:44:21
--- Design Name: 
+-- Design Name: Generador de señales
 -- Module Name: CounterEspecial - Arch_CounterEspecial
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
-
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-
-
 
 entity CounterEspecial is
   generic( N: NATURAL := 10;
@@ -50,7 +26,6 @@ entity CounterEspecial is
 end entity;
 
 architecture Arch_CounterEspecial of CounterEspecial is
-    --signal sQ : unsigned(N-1 downto 0) := (others=> '0');
     signal sQ : unsigned(N-1 downto 0) ;
 begin
 
@@ -71,7 +46,6 @@ begin
                     poTc_Half <='1' ;
                 end if;
                 
-                --sQ <= sQ + 1
                 sQ <= sQ + to_unsigned(1,N);
                 poTc <='0' ;
                 if sQ = to_unsigned(M-1 , N) then

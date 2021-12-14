@@ -1,41 +1,21 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
 -- 
 -- Create Date: 12.12.2021 18:38:10
--- Design Name: 
+-- Design Name: Generador de señales
 -- Module Name: TopLevel - TopLevel_Arch
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity TopLevel is
   Generic(
-    --Config Comuniacion Serie
+    --Config Comunicacion Serie:
     --Fclk = 100MHz ;
       --Tclk = 1/Fclk = 10 ns
       --BaudRate = 921600
@@ -74,27 +54,24 @@ signal sDataRAM : std_logic_vector(32-1 downto 0);
 signal sAddressRAM : std_logic_vector(10-1 downto 0);
 
 --signals para control del pwm
-signal sprescaler : std_logic_vector(32-1 downto 0); --Reg32_0
-signal sduty : std_logic_vector(16-1 downto 0); --Reg16_0
-
-signal sprescalerRAM : std_logic_vector(32-1 downto 0); --Reg32_1
-
-signal muxPWM : std_logic_vector(8-1 downto 0); --Reg8_0
+signal sprescaler : std_logic_vector(32-1 downto 0);  --  (P2)---->Reg32_0
+signal sduty : std_logic_vector(16-1 downto 0); --        (P1)---->Reg16_0
+signal sprescalerRAM : std_logic_vector(32-1 downto 0); --(P4)---->Reg32_1
+signal muxPWM : std_logic_vector(8-1 downto 0); --        (P3)---->Reg8_0
 
 begin
 
   Inst_PWM : entity work.pwm
     Port map(
       
-      piPrescaller =>  sprescaler(24-1 downto 0),--Parametro para definir frec del pwm (P2)
-      piDutyParam =>	sduty(10-1 downto 0),--Parametro para definir duty cycle fijo (P1)
+      piPrescaller =>  sprescaler(24-1 downto 0),--       (P2) : Parametro para definir frec del pwm 
+      piDutyParam =>	sduty(10-1 downto 0),--             (P1) : Parametro para definir duty cycle fijo 
   
       piPrescallerDuty => sprescalerRAM(24-1 downto 0), --(P4) del pizarron -Parametro que setea velocidad con que leera RAM (variación de Duty)
-      piDutyVar => sDataRAM(10-1 downto 0),
-      poReadDuty => open,--Genera pulso para realizar lectura de la RAM
+      piDutyVar => sDataRAM(10-1 downto 0), --Lectura de los valores de RAM (Duty variable)
       poAddr => sAddressRAM, --direccion de memoria a leer
   
-      piSelectDuty => muxPWM(0), --selecciona si usar duty fijo o leer de memoria (P3)
+      piSelectDuty => muxPWM(0), --                       (P3) : selecciona si usar duty fijo o leer de memoria 
       
       poPWM => poPWM,
   

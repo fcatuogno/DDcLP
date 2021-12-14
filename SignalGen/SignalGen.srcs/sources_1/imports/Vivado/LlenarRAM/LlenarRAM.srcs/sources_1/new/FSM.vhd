@@ -1,35 +1,17 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
 -- 
 -- Create Date: 10.11.2021 23:00:37
--- Design Name: 
+-- Design Name: Generador de señales
 -- Module Name: RegisterInterface - Arch_RegisterInterface
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 -- Para arracxar el sistema
 -- V 1.0
@@ -93,7 +75,6 @@ signal sWrRAM : std_logic;
 signal sDataRAM : std_logic_vector(32-1 downto 0);
 
 --signal para lectura de RAM
---signal sRdRAM : std_logic;
 signal sRDataRAM : std_logic_vector(32-1 downto 0);
 
 --Banco de Registros 1 (8 bits)
@@ -118,8 +99,8 @@ signal poReg_32_3_a, poReg_32_3_f : std_logic_vector(4*8-1 downto 0);
 --registros de FSM
 type TSTATE is (W_SOF, W_CMD, W_PARAM1, W_PARAM2, W_VAL0, W_VAL1, W_VAL2, W_VAL3, W_EOF,
 				S_SOF, S_CMD, S_PARAM1, S_PARAM2, S_VAL0, S_VAL1, S_VAL2, S_VAL3, S_EOF,
-				W_RAMVAL0,W_RAMVAL1,W_RAMVAL2,W_RAMVAL3,WR_RAM,
-				DEBUG_RAM); --FILL RAM
+				W_RAMVAL0,W_RAMVAL1,W_RAMVAL2,W_RAMVAL3,WR_RAM
+				);
 signal st_a, st_f : TSTATE;
 
 --registros de comandos
@@ -150,7 +131,7 @@ signal sTimeOutTC : std_logic;
 
 --signal para control de contador de llenado de RAM
 signal sAddressRst : std_logic;
-signal sAddresIncrement : std_logic; --Debe ser registro?
+signal sAddresIncrement : std_logic; 
 signal sAddressTC : std_logic;
 signal sAddressCont : std_logic_vector(10-1 downto 0);
 
@@ -164,10 +145,9 @@ begin
 	Port map(
 		piClk => piClk,
 
-		piWr     => sWrRAM,--declarar se�al de control
-		piDataWr => sDataRAM,--same
-		--piDataWr => std_logic_vector(to_unsigned(0,22)) & sAddressCont,--same
-		piAddrWr => sAddressCont,--same
+		piWr     => sWrRAM,
+		piDataWr => sDataRAM,
+		piAddrWr => sAddressCont,
 		poDataRd_1 => sRDataRAM,
 
 		poDataRd_2 => poDataRAM,
@@ -177,16 +157,11 @@ begin
 	--instancia contador TimeOut para Rx
 	InstCount : entity work.CounterModM
 	  Generic Map(
-	--Fclk = 100MHz ;
-	--Tclk = 1/Fclk = 10 ns
-	--TimeOut = 100ms
-	-- 
-	-- Modulo = TimeOut / Tclk
-	--
-	--  Modulo = 100.000us / 0.010 us = 10.000.000 -----------------> No llegaba a escribir toda la RAM con estos valores
-		--N => 24,   -- Numero de bits
-		--M => 10000000   -- Modulo del contador
-
+		--Fclk = 100MHz ;
+		--Tclk = 1/Fclk = 10 ns
+		--TimeOut = 100ms
+		-- 
+		-- Modulo = TimeOut / Tclk
 		--Modulo = 400.000us / 0.010 us = 40.000.000 
 		N => 26,   -- Numero de bits
 		M => 40000000   -- Modulo del contador
@@ -206,11 +181,11 @@ begin
 		M => 1024   -- Modulo del contador
 	)
 	  Port Map(
-		piClk => piClk,-- : in  std_logic;
-		piRst => sAddressRst,-- : in  std_logic;
-		piEna => sAddresIncrement,-- : in  std_logic;
-		poTc  => sAddressTC,--  : out std_logic;
-		poQ   => sAddressCont-- : out std_logic_vector(N-1 downto 0)
+		piClk => piClk,
+		piRst => sAddressRst,
+		piEna => sAddresIncrement,
+		poTc  => sAddressTC,
+		poQ   => sAddressCont
 	);
 	  
 
@@ -233,10 +208,10 @@ begin
 	poReg_32_2 <= poReg_32_2_a;
 	poReg_32_3 <= poReg_32_3_a;
 
-	--registro de comandos:
 	process(piClk)
 	begin
 		if rising_edge(piClk) then
+			--registros de comandos y recepcion
 			sCMDReg_a <= sCMDReg_f;
 			sPARAM1Reg_a <= sPARAM1Reg_f;
 			sPARAM2Reg_a <= sPARAM2Reg_f;
@@ -338,7 +313,6 @@ begin
 						sTimeOutRst <= '1';
 					elsif(piDATA = FILL_RAM) then
 						sCMDReg_f <= piDATA; --dato correcto
-						--st_f <= DEBUG_RAM;
 						st_f <= W_RAMVAL0;
 						sAddressRst <= '1'; --Reseteo contador a Address 0x000
 						sTimeOutRst <= '1';
@@ -351,17 +325,7 @@ begin
 						st_f <= W_SOF; --dato incorrecto, descarto trama
 					end if;
 				end if;
-			
-			------------------------------------------------------------------------------------------------
-			--when DEBUG_RAM =>
-			--	sWrRAM <= '1'; --debo escribir en el porximo pulso
-			--	sAddresIncrement <= '1'; --ojo con que haya que registrar esto
-			--	if sAddressTC = '1' then --llen� la RAM?
-			--		st_f <= W_EOF; --Aca se comienza a enviar SOF
-			--		sTimeOutRst <= '1';
-			--	end if;
-			------------------------------------------------------------------------------------------------
-			
+						
 			when W_PARAM1 => --Seleccion de Banco de registros
 				if sTimeOutTC = '1' then --venci� time out?
 					st_f <= W_SOF;
@@ -465,7 +429,7 @@ begin
 				sAddresIncrement <= '1';
 				st_f <= W_RAMVAL0;
 				if sAddressTC = '1' then --llen� la RAM?
-					st_f <= W_EOF; --Aca se comienza a enviar SOF
+					st_f <= W_EOF; --En el estado W_EOF se prepara registro para enviar SOF
 					sTimeOutRst <= '1';
 				end if;
 
@@ -474,14 +438,13 @@ begin
 					st_f <= W_SOF;
 
 				elsif sCMDReg_a = FILL_RAM or sCMDReg_a = READ_RAM	then --No debo esperar EOF realmente
-					st_f <= S_SOF; --De cualquier modo debo enviar SOF
+					st_f <= S_SOF;
 					sTimeOutRst <= '1';
 					sAddressRst <= '1';
 				elsif piDataReady = '1' and piDATA = EOF_BYTE then
 						--switch para escribir/leer registro
 						case sCMDReg_a is
 							when READ_BYTE =>
-								--Paso al siguiente estado, de cualquier manera leer� y enviar� registro
 								st_f <= S_SOF;	
 								sDATA_f <= SOF_BYTE; --Preparo la salida para enviar en el proximo estado
 								sTimeOutRst <= '1'; --Este Lucio me lo hizo comentar. TimeOut al enviar?
@@ -595,7 +558,7 @@ begin
 					case sPARAM1Reg_a is
 						when x"00" =>
 							--case de registro de 8 bits
-							case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+							case sPARAM2Reg_a is
 								when x"00" =>	
 									sDATA_f <= poReg_8_0_a;
 								when x"01" =>
@@ -611,7 +574,7 @@ begin
 
 						when x"01" =>
 							--case de registro de 16 bits
-							case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+							case sPARAM2Reg_a is
 								when x"00" =>	
 									sDATA_f <= poReg_16_0_a(15 downto 8);
 								when x"01" =>
@@ -627,7 +590,7 @@ begin
 							
 						when x"02" =>
 							--case de registro de 32 bits
-							case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+							case sPARAM2Reg_a is
 								when x"00" =>	
 									sDATA_f <= poReg_32_0_a(31 downto 24);
 								when x"01" =>
@@ -662,7 +625,7 @@ begin
 						case sPARAM1Reg_a is
 							when x"00" =>
 								--case de registro de 8 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
 									when x"01" =>
@@ -678,7 +641,7 @@ begin
 
 							when x"01" =>
 								--case de registro de 16 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_16_0_a(7 downto 0);
 									when x"01" =>
@@ -694,7 +657,7 @@ begin
 								
 							when x"02" =>
 								--case de registro de 32 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_32_0_a(23 downto 16);
 									when x"01" =>
@@ -730,7 +693,7 @@ begin
 						case sPARAM1Reg_a is
 							when x"00" =>
 								--case de registro de 8 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
 									when x"01" =>
@@ -746,7 +709,7 @@ begin
 
 							when x"01" =>
 								--case de registro de 16 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_16_0_a(7 downto 0);
 									when x"01" =>
@@ -762,7 +725,7 @@ begin
 								
 							when x"02" =>
 								--case de registro de 32 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_32_0_a(15 downto 8);
 									when x"01" =>
@@ -799,7 +762,7 @@ begin
 						case sPARAM1Reg_a is
 							when x"00" =>
 								--case de registro de 8 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_8_0_a;
 									when x"01" =>
@@ -815,7 +778,7 @@ begin
 
 							when x"01" =>
 								--case de registro de 16 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_16_0_a(7 downto 0);
 									when x"01" =>
@@ -831,7 +794,7 @@ begin
 								
 							when x"02" =>
 								--case de registro de 32 bits
-								case sPARAM2Reg_a is --esto estaba preguntando  el command en vez del nro de registro
+								case sPARAM2Reg_a is
 									when x"00" =>	
 										sDATA_f <= poReg_32_0_a(7 downto 0);
 									when x"01" =>

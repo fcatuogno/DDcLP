@@ -1,3 +1,13 @@
+----------------------------------------------------------------------------------
+-- Company: UTN.BA DDcLP 2021
+-- Engineer: Lucio
+-- 
+-- Create Date: ?
+-- Design Name: Generador de señales
+-- Module Name: MyBlockRAMDualPort - Arch_MyBlockRAMDualPort
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
+----------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -31,10 +41,7 @@ architecture Arch_MyBlockRAMDualPort of MyBlockRAMDualPort is
   
 
 begin
-
-
-   
-   
+  
    -- Escritura
    process(piClk)
    begin

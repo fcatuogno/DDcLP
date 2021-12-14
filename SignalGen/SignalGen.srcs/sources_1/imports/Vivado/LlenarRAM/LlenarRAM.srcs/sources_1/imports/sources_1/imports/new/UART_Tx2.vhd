@@ -1,15 +1,25 @@
+----------------------------------------------------------------------------------
+-- Company: UTN.BA DDcLP 2021
+-- Casi Engineer: Catuogno Fabian
+-- 
+-- Create Date: ? / ? / 2021
+-- Design Name: Generador de señales
+-- Module Name: UART_Tx - Arch_UART_Tx
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use IEEE.math_real.All;
-
 
 entity UART_Tx is
 	Generic (
 		BAUD_RATE_PRESCALLER : NATURAL := 10417
 	);
 	Port (
-		piclk	: in STD_LOGIC; --A fin de que las salida sean registradas
-		piRst	: in STD_LOGIC; --reset
+		piclk	: in STD_LOGIC; 
+		piRst	: in STD_LOGIC; 
 		piStart	: in STD_LOGIC; --start transmision
 		piDato	: in std_logic_vector(8-1 downto 0);
 		poTx	: out STD_LOGIC; --serial out
@@ -30,9 +40,6 @@ architecture Arch_UART_Tx of UART_Tx is
 
 	signal poSout : std_logic;
 
-	--constant cDATO : std_logic_vector(8-1 downto 0) := "00110000";
-	--signal sDATO2Tx : s
-
 	constant cBIT_START : std_logic := '0';
 	constant cBIT_STOP : std_logic := '1';
 	constant cLINE_IDLE : std_logic := '1';
@@ -50,11 +57,11 @@ begin
 	    M => BAUD_RATE_PRESCALLER
 	  )
 	  Port Map(
-	    piClk => piClk,-- : in  std_logic;
-	    piRst => sTimerRst,-- : in  std_logic;
-	    piEna => '1',-- : in  std_logic;
-	    poTc  => piTC,--  : out std_logic;
-	    poQ   => open -- : out std_logic_vector(N-1 downto 0)
+	    piClk => piClk,
+	    piRst => sTimerRst,
+	    piEna => '1',
+	    poTc  => piTC,
+	    poQ   => open
 	  );
 
 	process(piClk)

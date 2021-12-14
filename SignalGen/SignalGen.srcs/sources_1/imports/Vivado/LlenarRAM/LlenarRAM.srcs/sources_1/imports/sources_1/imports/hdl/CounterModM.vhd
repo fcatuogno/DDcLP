@@ -1,11 +1,13 @@
 ----------------------------------------------------------------------------------
---
--- led blink
--- arty board
--- 16.09.2021
---
+-- Company: UTN.BA DDcLP 2021
+-- Engineer: Lucio
+-- 
+-- Create Date: 16.09.2021
+-- Design Name: Generador de señales
+-- Module Name: CounterModM - Behavioral
+-- Project Name: Signal Gen
+-- Target Devices: Arty (Artix-7)
 ----------------------------------------------------------------------------------
-
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -14,7 +16,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity CounterModM is
   Generic(
-  N: NATURAL := 4;   -- Nmero de bits
+  N: NATURAL := 4;   -- Numero de bits
   M: NATURAL := 10   -- Modulo del contador
   );
   Port (
